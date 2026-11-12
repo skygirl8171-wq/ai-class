@@ -1,0 +1,1190 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>텀블러 공장 제조품질관리</title>
+    <style>
+      :root {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: #19342d;
+        background: #f2f6f3;
+      }
+
+      body {
+        min-height: 100vh;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .app-header {
+        min-height: 76px;
+        box-sizing: border-box;
+        width: 100%;
+        padding: 12px 32px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        background: #fff;
+        border-bottom: 1px solid #d8e3dc;
+      }
+
+      .brand-link,
+      .header-actions,
+      .header-actions nav {
+        display: flex;
+        align-items: center;
+      }
+
+      .brand-link {
+        gap: 12px;
+        color: inherit;
+        font-size: 20px;
+        font-weight: 750;
+        text-decoration: none;
+      }
+
+      .brand-link img {
+        width: 44px;
+        height: 44px;
+      }
+
+      .header-actions {
+        gap: 22px;
+      }
+
+      .header-actions nav {
+        gap: 20px;
+      }
+
+      .header-actions a {
+        color: #276447;
+        font-weight: 650;
+      }
+
+      .header-user {
+        color: #40584d;
+        white-space: nowrap;
+      }
+
+      .logout-button {
+        width: auto;
+        margin: 0;
+        padding: 9px 14px;
+      }
+
+      [hidden] {
+        display: none !important;
+      }
+
+      .page-content {
+        flex: 1;
+        width: 100%;
+        box-sizing: border-box;
+        display: grid;
+        place-items: center;
+        padding: 32px 20px;
+      }
+
+      .yellow-notice {
+        box-sizing: border-box;
+        width: 100%;
+        padding: 14px 32px;
+        color: #624b0b;
+        background: #fff3bf;
+        border-bottom: 1px solid #ead98a;
+        line-height: 1.5;
+      }
+
+      .app-footer {
+        padding: 18px 24px;
+        color: #52665b;
+        text-align: center;
+        background: #fff;
+        border-top: 1px solid #d8e3dc;
+      }
+
+      .login-box {
+        box-sizing: border-box;
+        width: min(100% - 40px, 420px);
+        padding: 36px;
+        border: 1px solid #d8e3dc;
+        border-radius: 18px;
+        background: #fff;
+        box-shadow: 0 12px 34px rgb(25 52 45 / 8%);
+      }
+
+      #app-screen {
+        width: min(100%, 920px);
+        box-sizing: border-box;
+        padding: 24px;
+        border-radius: 14px;
+        background: #fff;
+      }
+
+      #app-screen h1 {
+        margin-bottom: 0;
+      }
+
+      .screen-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .screen-heading button {
+        width: auto;
+        flex: 0 0 auto;
+        margin: 0;
+        padding: 11px 18px;
+      }
+
+      .screen-view {
+        margin-top: 24px;
+      }
+
+      .inspection-fields {
+        width: min(100%, 640px);
+      }
+
+      .inspection-fields select,
+      .inspection-fields textarea {
+        box-sizing: border-box;
+        width: 100%;
+        padding: 13px 14px;
+        border: 1px solid #b9c9c0;
+        border-radius: 9px;
+        background: #fff;
+        font: inherit;
+      }
+
+      .inspection-fields textarea {
+        min-height: 120px;
+        resize: vertical;
+      }
+
+      .inspection-fields select:focus,
+      .inspection-fields textarea:focus {
+        outline: 3px solid #b8d9c7;
+        border-color: #39785a;
+      }
+
+      .weight-range {
+        margin: 10px 0 0;
+        color: #40584d;
+        font-weight: 600;
+      }
+
+      .image-previews {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .image-previews img {
+        width: 92px;
+        height: 92px;
+        object-fit: cover;
+        border: 1px solid #d8e3dc;
+        border-radius: 8px;
+      }
+
+      .inspection-summary {
+        display: grid;
+        gap: 8px;
+        margin-bottom: 24px;
+      }
+
+      .inspection-summary p { margin: 0; }
+
+      .inspection-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        border-bottom: 1px solid #d8e3dc;
+      }
+
+      .inspection-tabs button {
+        width: auto;
+        margin: 0;
+        padding: 12px 14px;
+        border-radius: 8px 8px 0 0;
+        color: #40584d;
+        background: #edf2ee;
+      }
+
+      .inspection-tabs button[aria-selected="true"] {
+        color: #fff;
+        background: #276447;
+      }
+
+      .home-date {
+        max-width: 280px;
+      }
+
+      .home-summary-cards {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 22px;
+      }
+
+      .home-inspection-list {
+        display: grid;
+        gap: 12px;
+        margin-top: 20px;
+      }
+
+      .home-inspection-card {
+        display: grid;
+        grid-template-columns: 112px 1fr;
+        align-items: center;
+        gap: 16px;
+        width: 100%;
+        margin: 0;
+        padding: 12px;
+        border: 1px solid #d8e3dc;
+        border-radius: 10px;
+        color: #19342d;
+        background: #fff;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .home-inspection-card:hover { background: #f2f6f3; }
+
+      .home-inspection-card img,
+      .home-inspection-card .no-photo {
+        display: grid;
+        width: 112px;
+        height: 88px;
+        place-items: center;
+        object-fit: cover;
+        border-radius: 8px;
+        background: #edf2ee;
+      }
+
+      .home-inspection-details { display: grid; gap: 5px; }
+
+      .home-inspection-details strong { overflow-wrap: anywhere; }
+
+      .home-list-message { margin: 18px 0 0; color: #52665b; }
+
+      .home-summary-card {
+        min-height: 96px;
+        box-sizing: border-box;
+        padding: 18px;
+        border: 1px solid #d8e3dc;
+        border-radius: 12px;
+        background: #f8faf8;
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .home-summary-card:hover { background: #edf5ef; }
+
+      .home-summary-card[aria-pressed="true"] {
+        border: 2px solid #276447;
+        background: #e1efe5;
+      }
+
+      .home-summary-card span {
+        display: block;
+        color: #52665b;
+        font-weight: 650;
+      }
+
+      .home-summary-card strong {
+        display: block;
+        margin-top: 10px;
+        font-size: 28px;
+      }
+
+      @media (max-width: 680px) {
+        .home-summary-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      }
+
+      .inspection-tab-panel {
+        min-height: 48px;
+        padding-top: 18px;
+      }
+
+      .inspection-detail-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.8fr);
+        gap: 28px;
+      }
+
+      .detail-main-image {
+        display: grid;
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        place-items: center;
+        overflow: hidden;
+        border: 1px solid #d8e3dc;
+        border-radius: 10px;
+        background: #f2f6f3;
+      }
+
+      .detail-main-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+
+      .detail-thumbnails {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .detail-thumbnails button {
+        width: 68px;
+        height: 68px;
+        margin: 0;
+        padding: 3px;
+        overflow: hidden;
+        border: 2px solid transparent;
+        background: #fff;
+      }
+
+      .detail-thumbnails button[aria-current="true"] {
+        border-color: #276447;
+      }
+
+      .detail-thumbnails img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 5px;
+      }
+
+      .detail-values {
+        display: grid;
+        gap: 10px;
+        margin: 0;
+      }
+
+      .detail-values div {
+        display: grid;
+        grid-template-columns: 100px 1fr;
+        gap: 8px;
+      }
+
+      .detail-values dt {
+        color: #52665b;
+        font-weight: 650;
+      }
+
+      .detail-values dd {
+        margin: 0;
+        overflow-wrap: anywhere;
+      }
+
+      .detail-edit {
+        margin-top: 24px;
+        padding-top: 18px;
+        border-top: 1px solid #d8e3dc;
+      }
+
+      .detail-edit button { margin-top: 18px; }
+
+      @media (max-width: 680px) {
+        .inspection-detail-grid { grid-template-columns: 1fr; }
+      }
+
+      .inspection-submit {
+        margin-top: 24px;
+      }
+
+      #not-found-view p {
+        margin: 0 0 18px;
+      }
+
+      #not-found-view a {
+        display: inline-block;
+        padding: 10px 16px;
+        border-radius: 8px;
+        color: #fff;
+        background: #276447;
+        font-weight: 700;
+        text-decoration: none;
+      }
+
+      h1 {
+        margin: 0 0 28px;
+        font-size: 28px;
+        line-height: 1.35;
+      }
+
+      label {
+        display: block;
+        margin: 18px 0 8px;
+        font-weight: 650;
+      }
+
+      input {
+        box-sizing: border-box;
+        width: 100%;
+        padding: 13px 14px;
+        border: 1px solid #b9c9c0;
+        border-radius: 9px;
+        font: inherit;
+      }
+
+      input:focus {
+        outline: 3px solid #b8d9c7;
+        border-color: #39785a;
+      }
+
+      button {
+        width: 100%;
+        margin-top: 24px;
+        padding: 14px;
+        border: 0;
+        border-radius: 9px;
+        color: #fff;
+        background: #276447;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      button:disabled {
+        cursor: wait;
+        opacity: 0.7;
+      }
+
+      .logout-button:disabled {
+        cursor: not-allowed;
+      }
+
+      .error-message {
+        margin: 16px 0 0;
+        color: #b42318;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="app-header">
+      <a class="brand-link" href="/" data-link>
+        <img src="/logo.svg" alt="" />
+        <span>텀블러 공장 제조품질관리</span>
+      </a>
+      <div id="header-actions" class="header-actions" hidden>
+        <nav aria-label="주 메뉴">
+          <a href="/settings" data-link>설정</a>
+        </nav>
+        <span id="header-user" class="header-user"></span>
+        <button class="logout-button" type="button">로그아웃</button>
+      </div>
+    </header>
+
+    <aside id="yellow-notice" class="yellow-notice" hidden>
+      AI 분석 결과는 보조 자료이며 품질 담당자의 확인이 필요합니다. 최종 출하 승인은 현장 기준에 따라 별도로 진행하세요.
+    </aside>
+
+    <div class="page-content">
+      <main id="login-box" class="login-box">
+        <h1>텀블러 공장 제조품질관리</h1>
+        <form id="login-form">
+          <label for="username">계정</label>
+          <input id="username" name="username" value="writer" autocomplete="username" required />
+
+          <label for="password">비밀번호</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            value="writer1234!"
+            autocomplete="current-password"
+            required
+          />
+
+          <button id="login-button" type="submit">로그인</button>
+          <p id="login-error" class="error-message" role="alert" hidden></p>
+        </form>
+      </main>
+
+      <main id="app-screen" hidden>
+        <div class="screen-heading">
+          <h1 id="screen-title">품질 현황</h1>
+          <button id="new-inspection-link" type="button" data-route="/inspections/new" hidden>사진 등록</button>
+        </div>
+        <section id="home-view" class="screen-view" hidden>
+          <label class="home-date" for="home-date">날짜</label>
+          <input id="home-date" type="date" />
+          <p id="home-summary-error" class="error-message" role="alert" hidden></p>
+          <div class="home-summary-cards" aria-live="polite">
+            <button type="button" class="home-summary-card" data-home-filter="all" aria-pressed="true"><span>검사 건수</span><strong id="home-total">0</strong></button>
+            <button type="button" class="home-summary-card" data-home-filter="NG" aria-pressed="false"><span>NG 건수</span><strong id="home-ng">0</strong></button>
+            <button type="button" class="home-summary-card" data-home-filter="HOLD" aria-pressed="false"><span>HOLD 건수</span><strong id="home-hold">0</strong></button>
+            <button type="button" class="home-summary-card" data-home-filter="review-pending" aria-pressed="false"><span>보고서 검토 대기</span><strong id="home-review-pending">0</strong></button>
+          </div>
+          <p id="home-list-error" class="error-message" role="alert" hidden></p>
+          <div id="home-inspection-list" class="home-inspection-list" aria-live="polite"></div>
+        </section>
+        <section id="inspection-new-view" class="screen-view" hidden>
+          <form id="inspection-fields" class="inspection-fields">
+            <label for="inspection-product">제품</label>
+            <select id="inspection-product" name="product_id" required></select>
+
+            <label for="inspection-date">검사일시</label>
+            <input id="inspection-date" name="inspected_at" type="datetime-local" step="1" required />
+
+            <label for="inspection-revision">검사기준</label>
+            <select id="inspection-revision" name="revision">
+              <option value="Rev.A">Rev.A</option>
+              <option value="Rev.B">Rev.B</option>
+            </select>
+
+            <label for="inspection-weight">중량(g)</label>
+            <input id="inspection-weight" name="weight_g" type="number" step="any" />
+            <p id="inspection-weight-range" class="weight-range" aria-live="polite">기준 중량을 불러오는 중입니다.</p>
+
+            <label for="inspection-memo">메모</label>
+            <textarea id="inspection-memo" name="memo"></textarea>
+
+            <label for="inspection-images">사진</label>
+            <input id="inspection-images" name="images" type="file" accept="image/*" multiple />
+            <div id="inspection-image-previews" class="image-previews" aria-live="polite"></div>
+
+            <button id="inspection-submit" class="inspection-submit" type="submit">검사 등록</button>
+            <p id="inspection-submit-error" class="error-message" role="alert" hidden></p>
+          </form>
+        </section>
+        <section id="inspection-detail-view" class="screen-view" hidden>
+          <p id="inspection-detail-error" class="error-message" role="alert" hidden></p>
+          <div id="inspection-detail-content" hidden>
+            <div class="inspection-summary">
+              <p>검사번호: <strong id="detail-inspection-id"></strong></p>
+              <p>제품: <strong id="detail-product-name"></strong></p>
+              <p>판정: <strong id="detail-decision"></strong></p>
+              <p id="detail-content-version"></p>
+            </div>
+            <div class="inspection-tabs" role="tablist" aria-label="검사 상세 탭">
+              <button type="button" role="tab" id="detail-tab-1" aria-selected="true" aria-controls="detail-panel">① 사진·측정값</button>
+              <button type="button" role="tab" id="detail-tab-2" aria-selected="false" aria-controls="detail-panel">② AI 결과 확인</button>
+              <button type="button" role="tab" id="detail-tab-3" aria-selected="false" aria-controls="detail-panel">③ 검사기준과 비교하기</button>
+              <button type="button" role="tab" id="detail-tab-4" aria-selected="false" aria-controls="detail-panel">④ 내 판단 기록</button>
+            </div>
+            <div id="detail-panel" class="inspection-tab-panel" role="tabpanel" aria-labelledby="detail-tab-1">
+              <div id="detail-photo-measurement" class="inspection-detail-grid">
+                <div>
+                  <div id="detail-main-image" class="detail-main-image"></div>
+                  <div id="detail-thumbnails" class="detail-thumbnails" aria-label="검사 사진"></div>
+                </div>
+                <div>
+                  <dl class="detail-values">
+                    <div><dt>제품</dt><dd id="detail-value-product"></dd></div>
+                    <div><dt>검사일시</dt><dd id="detail-value-date"></dd></div>
+                    <div><dt>검사기준</dt><dd id="detail-value-revision"></dd></div>
+                    <div><dt>중량</dt><dd id="detail-value-weight"></dd></div>
+                    <div><dt>메모</dt><dd id="detail-value-memo"></dd></div>
+                  </dl>
+                  <form id="detail-edit-form" class="detail-edit">
+                    <label for="detail-edit-product">제품</label>
+                    <select id="detail-edit-product" name="product_id"></select>
+                    <label for="detail-edit-date">검사일시</label>
+                    <input id="detail-edit-date" name="inspected_at" type="datetime-local" step="1" required />
+                    <label for="detail-edit-weight">중량(g)</label>
+                    <input id="detail-edit-weight" name="weight_g" type="number" step="any" />
+                    <button id="detail-edit-save" type="submit">저장</button>
+                    <p id="detail-edit-error" class="error-message" role="alert" hidden></p>
+                  </form>
+                </div>
+              </div>
+              <p id="detail-placeholder" hidden></p>
+            </div>
+          </div>
+        </section>
+        <section id="not-found-view" hidden>
+          <p>페이지를 찾을 수 없습니다</p>
+          <a href="/">홈으로 가기</a>
+        </section>
+      </main>
+    </div>
+
+    <footer id="app-footer" class="app-footer" hidden>텀블러 공장 품질관리 시스템입니다.</footer>
+
+    <script>
+      const loginBox = document.querySelector('#login-box');
+      const appScreen = document.querySelector('#app-screen');
+      const loginForm = document.querySelector('#login-form');
+      const loginButton = document.querySelector('#login-button');
+      const loginError = document.querySelector('#login-error');
+      const headerActions = document.querySelector('#header-actions');
+      const headerUser = document.querySelector('#header-user');
+      const logoutButton = document.querySelector('.logout-button');
+      const yellowNotice = document.querySelector('#yellow-notice');
+      const appFooter = document.querySelector('#app-footer');
+      const screenTitle = document.querySelector('#screen-title');
+      const notFoundView = document.querySelector('#not-found-view');
+      const homeView = document.querySelector('#home-view');
+      const homeDate = document.querySelector('#home-date');
+      const homeSummaryError = document.querySelector('#home-summary-error');
+      const homeListError = document.querySelector('#home-list-error');
+      const homeInspectionList = document.querySelector('#home-inspection-list');
+      let activeHomeFilter = null;
+      const inspectionNewView = document.querySelector('#inspection-new-view');
+      const inspectionDetailView = document.querySelector('#inspection-detail-view');
+      const inspectionDetailContent = document.querySelector('#inspection-detail-content');
+      const inspectionDetailError = document.querySelector('#inspection-detail-error');
+      const detailPanel = document.querySelector('#detail-panel');
+      const detailPhotoMeasurement = document.querySelector('#detail-photo-measurement');
+      const detailPlaceholder = document.querySelector('#detail-placeholder');
+      const detailMainImage = document.querySelector('#detail-main-image');
+      const detailThumbnails = document.querySelector('#detail-thumbnails');
+      const detailEditForm = document.querySelector('#detail-edit-form');
+      const detailEditSave = document.querySelector('#detail-edit-save');
+      const detailEditError = document.querySelector('#detail-edit-error');
+      const detailTabs = [...document.querySelectorAll('.inspection-tabs [role="tab"]')];
+      let activeDetailImages = [];
+      let homeRequestId = 0;
+      let homeListRequestId = 0;
+
+      async function loadHomeSummary(requestedDate) {
+        const requestId = ++homeRequestId;
+        homeSummaryError.hidden = true;
+        const query = requestedDate ? `?date=${encodeURIComponent(requestedDate)}` : '';
+        try {
+          const response = await fetch(`/api/home${query}`);
+          const summary = await response.json();
+          if (!response.ok) throw new Error(summary.error || '하루 현황을 불러오지 못했습니다.');
+          if (requestId !== homeRequestId || window.location.pathname !== '/') return;
+
+          if (!requestedDate) homeDate.value = summary.date || '';
+          document.querySelector('#home-total').textContent = String(summary.total);
+          document.querySelector('#home-ng').textContent = String(summary.ng);
+          document.querySelector('#home-hold').textContent = String(summary.hold);
+          document.querySelector('#home-review-pending').textContent = String(summary.review_pending);
+          void loadHomeInspections(summary.date || requestedDate || '');
+        } catch (error) {
+          if (requestId !== homeRequestId) return;
+          homeSummaryError.textContent = error.message || '하루 현황을 불러오지 못했습니다.';
+          homeSummaryError.hidden = false;
+        }
+      }
+
+      async function loadHomeInspections(date = homeDate.value) {
+        const requestId = ++homeListRequestId;
+        homeListError.hidden = true;
+        const params = new URLSearchParams();
+        if (date) params.set('date', date);
+        if (activeHomeFilter === 'NG' || activeHomeFilter === 'HOLD') {
+          params.set('decision', activeHomeFilter);
+        } else if (activeHomeFilter === 'review-pending') {
+          params.set('review', 'pending');
+        }
+        const query = params.toString();
+        try {
+          const response = await fetch(`/api/inspections${query ? `?${query}` : ''}`);
+          const inspections = await response.json();
+          if (!response.ok) throw new Error(inspections.error || '검사 목록을 불러오지 못했습니다.');
+          if (requestId !== homeListRequestId || window.location.pathname !== '/') return;
+          renderHomeInspections(inspections);
+        } catch (error) {
+          if (requestId !== homeListRequestId) return;
+          homeInspectionList.replaceChildren();
+          homeListError.textContent = error.message || '검사 목록을 불러오지 못했습니다.';
+          homeListError.hidden = false;
+        }
+      }
+
+      function renderHomeInspections(inspections) {
+        homeInspectionList.replaceChildren();
+        if (inspections.length === 0) {
+          const message = document.createElement('p');
+          message.className = 'home-list-message';
+          message.textContent = activeHomeFilter
+            ? '이 날짜에 이 종류의 검사가 없습니다.'
+            : '이 날짜에 등록한 검사가 없습니다.';
+          homeInspectionList.append(message);
+          return;
+        }
+
+        const productNames = {
+          'P-SILVER': '텀블러 실버',
+          'P-WHITE': '텀블러 화이트',
+          'P-BLACK': '텀블러 블랙',
+        };
+        const decisionLabels = { OK: '정상', NG: '불량', HOLD: '보류' };
+        inspections.forEach((inspection) => {
+          const card = document.createElement('button');
+          card.type = 'button';
+          card.className = 'home-inspection-card';
+          card.dataset.inspectionId = inspection.inspection_id;
+
+          if (inspection.images?.[0]) {
+            const image = document.createElement('img');
+            image.src = inspection.images[0];
+            image.alt = '검사 사진';
+            card.append(image);
+          } else {
+            const placeholder = document.createElement('span');
+            placeholder.className = 'no-photo';
+            placeholder.textContent = '사진 없음';
+            card.append(placeholder);
+          }
+
+          const details = document.createElement('span');
+          details.className = 'home-inspection-details';
+          const id = document.createElement('strong');
+          id.textContent = inspection.inspection_id;
+          const product = document.createElement('span');
+          product.textContent = productNames[inspection.product_id] || inspection.product_id;
+          const weight = document.createElement('span');
+          weight.textContent = inspection.weight_g === null ? '미측정' : `${inspection.weight_g}g`;
+          const decision = document.createElement('span');
+          decision.textContent = decisionLabels[inspection.decision] || '미판정';
+          details.append(id, product, weight, decision);
+          card.append(details);
+          homeInspectionList.append(card);
+        });
+      }
+
+      homeInspectionList.addEventListener('click', (event) => {
+        const card = event.target.closest('button[data-inspection-id]');
+        if (card) navigate(`/inspections/${encodeURIComponent(card.dataset.inspectionId)}`);
+      });
+
+      function updateHomeFilterSelection() {
+        document.querySelectorAll('[data-home-filter]').forEach((card) => {
+          card.setAttribute('aria-pressed', String(card.dataset.homeFilter === (activeHomeFilter || 'all')));
+        });
+      }
+
+      document.querySelectorAll('[data-home-filter]').forEach((card) => {
+        card.addEventListener('click', () => {
+          const selected = card.dataset.homeFilter;
+          if (selected === 'all') activeHomeFilter = null;
+          else activeHomeFilter = activeHomeFilter === selected ? null : selected;
+          updateHomeFilterSelection();
+          void loadHomeInspections(homeDate.value);
+        });
+      });
+
+      homeDate.addEventListener('change', () => loadHomeSummary(homeDate.value));
+      const newInspectionLink = document.querySelector('#new-inspection-link');
+      const productSelect = document.querySelector('#inspection-product');
+      const revisionSelect = document.querySelector('#inspection-revision');
+      const weightRange = document.querySelector('#inspection-weight-range');
+      const imageInput = document.querySelector('#inspection-images');
+      const imagePreviews = document.querySelector('#inspection-image-previews');
+      const inspectionForm = document.querySelector('#inspection-fields');
+      const inspectionSubmit = document.querySelector('#inspection-submit');
+      const inspectionSubmitError = document.querySelector('#inspection-submit-error');
+      let selectedImageDataUrls = [];
+      let imageSelectionVersion = 0;
+      const roleLabels = { writer: '작성자', reviewer: '검토자', 'factory-user': '품질관리' };
+
+      function readImageAsDataUrl(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => reject(new Error('사진을 읽지 못했습니다.'));
+          reader.readAsDataURL(file);
+        });
+      }
+
+      imageInput.addEventListener('change', async () => {
+        const selectionVersion = ++imageSelectionVersion;
+        selectedImageDataUrls = [];
+        imagePreviews.replaceChildren();
+        const files = [...imageInput.files];
+        try {
+          const dataUrls = await Promise.all(files.map(readImageAsDataUrl));
+          if (selectionVersion !== imageSelectionVersion) return;
+          selectedImageDataUrls = dataUrls;
+          dataUrls.forEach((dataUrl, index) => {
+            const image = document.createElement('img');
+            image.src = dataUrl;
+            image.alt = `선택한 사진 ${index + 1}`;
+            imagePreviews.append(image);
+          });
+        } catch (error) {
+          if (selectionVersion !== imageSelectionVersion) return;
+          imagePreviews.textContent = error.message || '사진을 읽지 못했습니다.';
+        }
+      });
+
+      inspectionForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        inspectionSubmitError.hidden = true;
+        if (!inspectionForm.reportValidity()) return;
+        if (selectedImageDataUrls.length === 0) {
+          inspectionSubmitError.textContent = '사진을 골라 주세요.';
+          inspectionSubmitError.hidden = false;
+          return;
+        }
+
+        inspectionSubmit.disabled = true;
+        const weightValue = document.querySelector('#inspection-weight').value;
+        const dateValue = document.querySelector('#inspection-date').value;
+        const payload = {
+          product_id: productSelect.value,
+          inspected_at: `${dateValue.replace('T', ' ')}${dateValue.length === 16 ? ':00' : ''}`,
+          revision: revisionSelect.value,
+          weight_g: weightValue === '' ? null : Number(weightValue),
+          memo: document.querySelector('#inspection-memo').value,
+          images: selectedImageDataUrls,
+        };
+
+        try {
+          const response = await fetch('/api/inspections', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          const result = await response.json();
+          if (!response.ok || result.error) {
+            throw new Error(result.error || '검사를 등록하지 못했습니다.');
+          }
+          navigate(`/inspections/${encodeURIComponent(result.inspection_id)}`);
+        } catch (error) {
+          inspectionSubmitError.textContent = error.message || '검사를 등록하지 못했습니다.';
+          inspectionSubmitError.hidden = false;
+        } finally {
+          inspectionSubmit.disabled = false;
+        }
+      });
+
+      function renderScreen() {
+        const route = window.location.pathname;
+        homeView.hidden = true;
+        homeRequestId += 1;
+        homeListRequestId += 1;
+        inspectionNewView.hidden = true;
+        inspectionDetailView.hidden = true;
+        newInspectionLink.hidden = true;
+        let title = '품질 현황';
+        if (route === '/inspections/new') title = '검사 등록';
+        else if (/^\/inspections\/[^/]+$/.test(route)) title = '검사 상세';
+        else if (route === '/settings') title = '설정';
+        else if (route !== '/') {
+          screenTitle.hidden = true;
+          notFoundView.hidden = false;
+          return;
+        }
+
+        screenTitle.textContent = title;
+        screenTitle.hidden = false;
+        notFoundView.hidden = true;
+        const isHome = route === '/';
+        const isNewInspection = route === '/inspections/new';
+        const isDetail = /^\/inspections\/[^/]+$/.test(route);
+        homeView.hidden = !isHome;
+        inspectionNewView.hidden = !isNewInspection;
+        inspectionDetailView.hidden = !isDetail;
+        newInspectionLink.hidden = !isHome;
+
+        if (isHome) loadHomeSummary(homeDate.value || undefined);
+        if (isNewInspection) loadInspectionFields();
+        if (isDetail) loadInspectionDetail(route);
+      }
+
+      async function loadInspectionFields() {
+        try {
+          const productsResponse = await fetch('/api/products');
+          const products = await productsResponse.json();
+          if (!productsResponse.ok) throw new Error(products.error || '제품 목록을 불러오지 못했습니다.');
+
+          productSelect.replaceChildren(...products.map((product) => {
+            const option = document.createElement('option');
+            option.value = product.product_id;
+            option.textContent = product.label;
+            return option;
+          }));
+
+          const now = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
+          }).formatToParts(new Date()).reduce((parts, part) => ({ ...parts, [part.type]: part.value }), {});
+          document.querySelector('#inspection-date').value = `${now.year}-${now.month}-${now.day}T${now.hour}:${now.minute}:${now.second}`;
+          await loadWeightRange();
+        } catch (error) {
+          weightRange.textContent = error.message || '제품과 검사기준을 불러오지 못했습니다.';
+        }
+      }
+
+      async function loadWeightRange() {
+        const revision = revisionSelect.value;
+        const productId = productSelect.value;
+        try {
+          const response = await fetch(`/api/standards/${revision}`);
+          const standard = await response.json();
+          if (!response.ok) throw new Error(standard.error || '검사기준을 불러오지 못했습니다.');
+          const range = standard.weight_g[productId];
+          weightRange.textContent = `기준 중량: ${range.min}~${range.max}g`;
+        } catch (error) {
+          weightRange.textContent = error.message || '검사기준을 불러오지 못했습니다.';
+        }
+      }
+
+      productSelect.addEventListener('change', loadWeightRange);
+      revisionSelect.addEventListener('change', loadWeightRange);
+
+      async function loadInspectionDetail(route) {
+        inspectionDetailContent.hidden = true;
+        inspectionDetailError.hidden = true;
+        try {
+          const response = await fetch(`/api${route}`);
+          const inspection = await response.json();
+          if (!response.ok) throw new Error(inspection.error || '검사를 불러오지 못했습니다.');
+          if (window.location.pathname !== route) return;
+
+          const productNames = {
+            'P-SILVER': '텀블러 실버',
+            'P-WHITE': '텀블러 화이트',
+            'P-BLACK': '텀블러 블랙',
+          };
+          const decisionLabels = { OK: '정상', NG: '불량', HOLD: '보류' };
+          document.querySelector('#detail-inspection-id').textContent = inspection.inspection_id;
+          document.querySelector('#detail-product-name').textContent = productNames[inspection.product_id] || inspection.product_id;
+          document.querySelector('#detail-decision').textContent = decisionLabels[inspection.decision] || '미판정';
+          document.querySelector('#detail-content-version').textContent = `검사 기록 버전: ${inspection.content_version}`;
+          document.querySelector('#detail-value-product').textContent = productNames[inspection.product_id] || inspection.product_id;
+          document.querySelector('#detail-value-date').textContent = inspection.inspected_at;
+          document.querySelector('#detail-value-revision').textContent = inspection.revision;
+          document.querySelector('#detail-value-weight').textContent = inspection.weight_g === null ? '미측정' : `${inspection.weight_g}g`;
+          document.querySelector('#detail-value-memo').textContent = inspection.memo || '없음';
+          populateDetailProductOptions(inspection.product_id);
+          document.querySelector('#detail-edit-date').value = inspection.inspected_at.replace(' ', 'T');
+          document.querySelector('#detail-edit-weight').value = inspection.weight_g ?? '';
+          detailEditError.hidden = true;
+          renderDetailImages(Array.isArray(inspection.images) ? inspection.images : []);
+          selectDetailTab(0);
+          inspectionDetailContent.hidden = false;
+        } catch (error) {
+          if (window.location.pathname !== route) return;
+          inspectionDetailError.textContent = error.message || '검사를 불러오지 못했습니다.';
+          inspectionDetailError.hidden = false;
+        }
+      }
+
+      function selectDetailTab(index) {
+        detailTabs.forEach((tab, tabIndex) => {
+          tab.setAttribute('aria-selected', String(tabIndex === index));
+        });
+        detailPanel.setAttribute('aria-labelledby', detailTabs[index].id);
+        detailPhotoMeasurement.hidden = index !== 0;
+        detailPlaceholder.hidden = index === 0;
+        detailPlaceholder.textContent = index === 0 ? '' : '이 탭은 나중 회차에서 만듭니다.';
+      }
+
+      function renderDetailImages(images) {
+        activeDetailImages = images;
+        detailMainImage.replaceChildren();
+        detailThumbnails.replaceChildren();
+        if (images.length === 0) {
+          detailMainImage.textContent = '등록된 사진이 없습니다.';
+          return;
+        }
+
+        images.forEach((imageUrl, index) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.dataset.imageIndex = String(index);
+          button.setAttribute('aria-label', `사진 ${index + 1} 크게 보기`);
+
+          const thumbnail = document.createElement('img');
+          thumbnail.src = imageUrl;
+          thumbnail.alt = '';
+          button.append(thumbnail);
+          detailThumbnails.append(button);
+        });
+        showDetailImage(0);
+      }
+
+      function showDetailImage(index) {
+        const imageUrl = activeDetailImages[index];
+        if (!imageUrl) return;
+
+        const image = document.createElement('img');
+        image.src = imageUrl;
+        image.alt = `검사 사진 ${index + 1}`;
+        detailMainImage.replaceChildren(image);
+        detailThumbnails.querySelectorAll('button').forEach((button, buttonIndex) => {
+          button.setAttribute('aria-current', String(buttonIndex === index));
+        });
+      }
+
+      detailThumbnails.addEventListener('click', (event) => {
+        const button = event.target.closest('button[data-image-index]');
+        if (button) showDetailImage(Number(button.dataset.imageIndex));
+      });
+
+      function populateDetailProductOptions(selectedProductId) {
+        const products = [
+          ['P-SILVER', '은색 텀블러'],
+          ['P-WHITE', '흰색 텀블러'],
+          ['P-BLACK', '검정 텀블러'],
+        ];
+        document.querySelector('#detail-edit-product').replaceChildren(...products.map(([id, label]) => {
+          const option = document.createElement('option');
+          option.value = id;
+          option.textContent = label;
+          option.selected = id === selectedProductId;
+          return option;
+        }));
+      }
+
+      detailEditForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        detailEditError.hidden = true;
+        if (!detailEditForm.reportValidity()) return;
+
+        detailEditSave.disabled = true;
+        const dateValue = document.querySelector('#detail-edit-date').value;
+        const weightValue = document.querySelector('#detail-edit-weight').value;
+        try {
+          const response = await fetch(`/api${window.location.pathname}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              product_id: document.querySelector('#detail-edit-product').value,
+              inspected_at: `${dateValue.replace('T', ' ')}${dateValue.length === 16 ? ':00' : ''}`,
+              weight_g: weightValue === '' ? null : Number(weightValue),
+            }),
+          });
+          const result = await response.json();
+          if (!response.ok || result.error) throw new Error(result.error || '저장하지 못했습니다.');
+          await loadInspectionDetail(window.location.pathname);
+        } catch (error) {
+          detailEditError.textContent = error.message || '저장하지 못했습니다.';
+          detailEditError.hidden = false;
+        } finally {
+          detailEditSave.disabled = false;
+        }
+      });
+
+      detailTabs.forEach((tab, index) => tab.addEventListener('click', () => selectDetailTab(index)));
+
+      function navigate(path) {
+        if (window.location.pathname !== path) {
+          window.history.pushState({}, '', path);
+        }
+        renderScreen();
+      }
+
+      function showApp(user) {
+        loginBox.hidden = true;
+        appScreen.hidden = false;
+        headerActions.hidden = false;
+        yellowNotice.hidden = false;
+        appFooter.hidden = false;
+        headerUser.textContent = `${user.username} (${roleLabels[user.role] || user.role})`;
+        renderScreen();
+      }
+
+      document.addEventListener('click', (event) => {
+        const routeButton = event.target.closest('[data-route]');
+        if (routeButton) {
+          navigate(routeButton.dataset.route);
+          return;
+        }
+
+        const link = event.target.closest('a[data-link]');
+        if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        event.preventDefault();
+        navigate(link.getAttribute('href'));
+      });
+
+      window.addEventListener('popstate', renderScreen);
+
+      function showLoginError(message) {
+        loginError.textContent = message;
+        loginError.hidden = false;
+      }
+
+      async function checkLogin() {
+        try {
+          const response = await fetch('/api/session');
+          const result = await response.json();
+          if (!response.ok) {
+            throw new Error(result.error || '로그인 상태를 확인하지 못했습니다.');
+          }
+          if (result.user) showApp(result.user);
+        } catch (error) {
+          showLoginError(error.message || '로그인 상태를 확인하지 못했습니다.');
+        }
+      }
+
+      loginForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        loginError.hidden = true;
+        loginButton.disabled = true;
+
+        const formData = new FormData(loginForm);
+        try {
+          const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              username: formData.get('username'),
+              password: formData.get('password'),
+            }),
+          });
+          const result = await response.json();
+          if (!response.ok || result.error) {
+            showLoginError(result.error || '로그인 정보를 확인하세요.');
+            return;
+          }
+          showApp(result.user);
+        } catch (error) {
+          showLoginError(error.message || '서버와 통신할 수 없습니다.');
+        } finally {
+          loginButton.disabled = false;
+        }
+      });
+
+      logoutButton.addEventListener('click', async () => {
+        logoutButton.disabled = true;
+        try {
+          const response = await fetch('/api/logout', { method: 'POST' });
+          const result = await response.json();
+          if (!response.ok || result.error) {
+            throw new Error(result.error || '로그아웃하지 못했습니다.');
+          }
+
+          loginForm.reset();
+          loginError.textContent = '';
+          loginError.hidden = true;
+          headerUser.textContent = '';
+          headerActions.hidden = true;
+          yellowNotice.hidden = true;
+          appFooter.hidden = true;
+          appScreen.hidden = true;
+          loginBox.hidden = false;
+          homeRequestId += 1;
+          homeListRequestId += 1;
+          homeDate.value = '';
+          activeHomeFilter = null;
+          updateHomeFilterSelection();
+          homeSummaryError.hidden = true;
+          homeListError.hidden = true;
+          homeInspectionList.replaceChildren();
+          document.querySelector('#home-total').textContent = '0';
+          document.querySelector('#home-ng').textContent = '0';
+          document.querySelector('#home-hold').textContent = '0';
+          document.querySelector('#home-review-pending').textContent = '0';
+        } catch (error) {
+          showLoginError(error.message || '로그아웃하지 못했습니다.');
+          loginBox.hidden = false;
+        } finally {
+          logoutButton.disabled = false;
+        }
+      });
+
+      checkLogin();
+    </script>
+  </body>
+</html>
