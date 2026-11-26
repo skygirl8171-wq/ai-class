@@ -295,7 +295,14 @@ export class InspectionStore {
       return { inspections: [], inspection_records: [], record_defects: [] };
     }
     const state = JSON.parse(readFileSync(this.filePath, 'utf8')) as LocalState;
-    state.inspections = Array.isArray(state.inspections) ? state.inspections : [];
+    state.inspections = Array.isArray(state.inspections)
+      ? state.inspections.map((inspection) => ({
+          ...inspection,
+          revision: inspection.revision === 'Rev.B' ? 'Rev.B' : 'Rev.A',
+          content_version: Number(inspection.content_version) || 0,
+          images: Array.isArray(inspection.images) ? inspection.images : [],
+        }))
+      : [];
     state.inspection_records = Array.isArray(state.inspection_records) ? state.inspection_records : [];
     state.record_defects = Array.isArray(state.record_defects) ? state.record_defects : [];
     return state;
