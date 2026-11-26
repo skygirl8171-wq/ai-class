@@ -1,17 +1,28 @@
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import express, { type NextFunction, type Request, type Response } from 'express';
 import { mkdirSync } from 'node:fs';
 import session from 'express-session';
 import path from 'node:path';
 import { ApiExceptionFilter } from './api-exception.filter';
 import { AppModule } from './app.module';
+import { getGeminiInfo, getStorageInfo, validateModes } from './storage-mode';
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule);
+  try {
+    validateModes();
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : '저장 및 판독 방식을 확인하세요.');
+    process.exitCode = 1;
+    return;
+  }
+
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const publicDirectory = path.join(process.cwd(), 'public');
   const runtimeDirectory = path.join(process.cwd(), 'runtime');
   const uploadsDirectory = path.join(runtimeDirectory, 'uploads');
   mkdirSync(uploadsDirectory, { recursive: true });
+  app.useBodyParser('json', { limit: '50mb' });
 
   app.use(
     session({
@@ -60,7 +71,8 @@ async function bootstrap(): Promise<void> {
   const port = Number(process.env.PORT ?? 4185);
   await app.listen(port, '127.0.0.1');
   console.log(`품질 대시보드 서버 실행 중: http://127.0.0.1:${port}`);
-  console.log('저장소: 내 컴퓨터(runtime/local-state.json)');
+  console.log(`저장소: ${getStorageInfo().label}`);
+  console.log(`Gemini 판독: ${getGeminiInfo().gemini_label}`);
 }
 
 void bootstrap();

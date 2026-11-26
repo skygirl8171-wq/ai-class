@@ -2,13 +2,19 @@
 
 이 문서는 AI 도구가 코드를 만들 때 읽는 자료입니다. 수강생은 이해하지 않아도 됩니다.
 
-- 프롬프트가 요청한 일만 합니다. 이 문서의 내용을 한 번에 모두 만들지 않습니다.
+- 따로 부탁이 없으면 프롬프트가 말한 기능만 만듭니다. 프롬프트가 이 문서 전체를 가리켜도 같습니다. 사용자가 여러 기능을 한꺼번에 만들어 달라고 하거나 이 문서에 없는 일을 부탁하면 그대로 합니다.
 - 앞 회차 문서와 다르면 번호가 큰 문서를 따릅니다. 이 회차가 바꾸는 앞 회차 약속: 서버 창의 저장소 문장(2회차 문서의 "저장")은 이 문서 "저장 방식 고르기"의 문장으로 바꿉니다. 저장 방식 답(2회차 문서 "서버 기능 목록"의 `GET /api/operations`)은 이제 이 문서 "저장 방식 고르기"의 둘 가운데 하나입니다. 등록한 사진의 저장 위치와 `images` 주소(2회차 문서의 "저장"과 "서버 기능 목록")는 `live`일 때 이 문서의 "서버가 Google을 쓰는 법"을 따릅니다.
 - 맨 끝의 끝 표시를 만들어 `AGENTS.md`가 말한 대로 답의 마지막 줄에 적습니다.
 
+## 따라하기 단계와 도구 전환
+
+단계 번호는 [3회차 따라하기 교재](https://github.com/startup-life/manufacturing-quality-dashboard-student/blob/main/follow-along/session-3.md)를 기준으로 합니다. 3-1~3-5는 Cline Desktop에서 준비하고 3-6은 ego (lite) 브라우저에서 Apps Script API 설정을 확인합니다. 3-7~3-8은 Antigravity, 3-9~3-12는 Cline Desktop, 3-13~3-20은 다시 Antigravity에서 같은 웹 서비스 폴더를 사용합니다.
+
+3-7, 3-9, 3-13의 프롬프트에서 `---` 아래 두 줄은 앞 도구에서 마친 일과 현재 교재 위치입니다. 해당 파일과 설정을 이어 쓰고 구분선 위의 요청을 진행합니다. 3-9에서는 3-8에서 만든 `.clasp.json`을 사용하고, 3-13에서는 3-12까지 만든 `gas/Code.js`와 `gas/appsscript.json`을 이어 씁니다.
+
 ## 이번 회차가 끝나면 되는 것
 
-등록한 검사는 내 Google 시트에, 사진은 내 Google 드라이브에 저장됩니다. 상세 화면의 사진도 드라이브에서 읽어 옵니다. `.env`의 `STORAGE_MODE`로 저장 방식을 고릅니다. 내 컴퓨터는 연습용(`mock`), Google은 실제 연결(`live`)입니다. 화면 기능은 2회차와 같습니다.
+등록한 검사는 내 Google 시트(내 Google 계정의 표 문서)에, 사진은 내 Google 드라이브(내 Google 계정의 파일 보관함)에 저장됩니다. 상세 화면의 사진도 드라이브에서 읽어 옵니다. `.env`의 `STORAGE_MODE`로 저장 방식을 고릅니다. 내 컴퓨터는 연습용(`mock`), Google은 실제 연결(`live`)입니다. 화면 기능은 2회차와 같습니다.
 
 ## 저장 방식 고르기
 
@@ -17,7 +23,7 @@
 | 값 | 저장 방식 | 약속 |
 |---|---|---|
 | `mock` | 내 컴퓨터(`runtime` 폴더) | 2회차와 똑같이 동작합니다 |
-| `live` | Google(시트와 드라이브) | 서버는 `.env`의 `GAS_WEBAPP_URL`(Google 웹앱 주소)로 Google 쪽 코드에 일을 시킵니다 |
+| `live` | Google(시트와 드라이브) | 서버는 `.env`의 `GAS_WEBAPP_URL`(Apps Script 웹앱 주소)로 Apps Script 코드(Google에서 돌아가는 코드)에 일을 시킵니다 |
 | 값이 없거나 다른 값 | 내 컴퓨터 | `mock`으로 봅니다 |
 
 Google에 실제로 저장하는 코드("서버가 Google을 쓰는 법")는 뒤에 나오는 프롬프트에서 만듭니다. 그전까지는 어떤 값을 골라도 내 컴퓨터에 저장합니다.
@@ -28,17 +34,15 @@ Google에 실제로 저장하는 코드("서버가 Google을 쓰는 법")는 뒤
 | 설정 화면의 저장소 줄 | `저장소: 내 컴퓨터(mock)` | `저장소: Google 시트·드라이브(live)` |
 | `GET /api/operations`의 답 | `{"storage": "mock", "label": "내 컴퓨터(mock)"}` | `{"storage": "live", "label": "Google 시트·드라이브(live)"}` |
 
-## 비밀 값과 Google 로그인
+## 비밀 값
 
 | 항목 | 약속 |
 |---|---|
-| 화면과 창 | 화면, 서버 창, 안내 문장에도 웹앱 주소를 넣지 않습니다 |
-| Google 로그인과 권한 승인 | 사용자가 직접 합니다. 이 화면은 AI가 대신 조작하지 않습니다 |
-| `.env`, `.clasp.json` | 사용자가 채팅으로 준 값은 `.env`에 넣습니다. 두 파일은 Git에 올리지 않습니다. `.gitignore`에 없으면 더합니다 |
+| 화면과 창 | 웹 서비스의 화면, 서버 창, 웹 서비스의 안내 문장에는 Apps Script 웹앱 주소(서버가 Apps Script 코드를 부를 때 쓰는 주소)를 넣지 않습니다 |
 
-## Google 쪽 코드의 틀
+## Apps Script 코드의 틀
 
-Google 쪽 코드(Apps Script)는 `gas` 폴더에 둡니다. 코드는 `gas/Code.js` 한 파일에, 설정은 `gas/appsscript.json`에 둡니다. Google에서 돌아가므로 `require`, `import`, `export`, `process.env`를 쓰지 않습니다.
+Apps Script 코드(Google에서 돌아가는 코드)는 `gas` 폴더에 둡니다. 코드는 `gas/Code.js` 한 파일에, 설정은 `gas/appsscript.json`에 둡니다. Google에서 돌아가므로 `require`, `import`, `export`, `process.env`를 쓰지 않습니다.
 
 `appsscript.json`의 값입니다. `gas:create`가 같은 이름의 파일을 먼저 만들었더라도 이 값으로 새로 씁니다.
 
@@ -53,13 +57,13 @@ Google 쪽 코드(Apps Script)는 `gas` 폴더에 둡니다. 코드는 `gas/Code
 | 답 | 늘 JSON입니다. 성공은 `{"ok": true, "data": 결과}`, 실패는 `{"ok": false, "error": "한국어 문장"}`입니다 |
 | 오류 | 어떤 오류든 잡아서 위 모양으로 답합니다. 이 문서에 적힌 안내 문장(예: "수정할 기록이 없습니다.")은 `createUserError(문장)`으로 던지고, 이 함수는 그 문장을 오류의 `userMessage`에도 담습니다. `doPost`는 잡은 오류에 `userMessage`가 있으면 그 문장으로 답하고, 예상 못 한 오류는 "알 수 없는 오류가 났습니다."로 답합니다 |
 
-## Google 쪽 일 여섯 가지
+## Apps Script 코드의 일 여섯 가지
 
 일 이름은 아래 여섯 가지입니다. 나중 회차에서 더할 수 있습니다. "답"은 `{"ok": true, "data": 결과}`의 `data`입니다.
 
 | 일 이름 | 요청에 더하는 값 | 하는 일 | 답 |
 |---|---|---|---|
-| `setup`(시트 만들기) | 없음 | 스프레드시트 "텀블러 공장 품질관리 데이터베이스"와 드라이브 폴더 "텀블러 공장 품질검사 사진"을 만들고 그 ID를 스크립트 속성 `SHEET_ID`, `FOLDER_ID`에 기억합니다. 기억해 둔 ID에 해당하는 시트와 폴더가 남아 있으면 새로 만들지 않고 그것을 씁니다(같은 이름을 찾아 고르지 않습니다). `inspections`, `images` 탭을 만들고 1행에 머리글("서버가 Google을 쓰는 법")을 쓰며, 처음 생긴 빈 기본 탭은 지웁니다. 다시 실행하면 빠진 탭을 만들고, 이미 있는 탭에 빠진 머리글 칸을 끝에 더합니다 | `{"sheetUrl": 시트 주소, "folderUrl": 폴더 주소}` |
+| `setup`(시트 만들기) | 없음 | 스프레드시트 "텀블러 공장 품질관리 데이터베이스"와 드라이브 폴더 "텀블러 공장 품질검사 사진"을 만들고 그 ID를 Apps Script 스크립트 속성(Google에 저장해 두는 설정) `SHEET_ID`, `FOLDER_ID`에 기억합니다. 기억해 둔 ID에 해당하는 시트와 폴더가 남아 있으면 새로 만들지 않고 그것을 씁니다(같은 이름을 찾아 고르지 않습니다). `inspections`, `images` 탭을 만들고 1행에 머리글("서버가 Google을 쓰는 법")을 쓰며, 처음 생긴 빈 기본 탭은 지웁니다. 다시 실행하면 빠진 탭을 만들고, 이미 있는 탭에 빠진 머리글 칸을 끝에 더합니다 | `{"sheetUrl": 시트 주소, "folderUrl": 폴더 주소}` |
 | `read`(시트 읽기) | `{"tabs": [탭 이름들]}` | 탭마다 1행의 머리글을 이름으로 쓴 줄 목록을 돌려줍니다. 없는 탭은 빈 목록이고, 날짜로 읽힌 칸은 "2026-10-27 19:05:30" 형식의 글자로 바꿉니다 | `{"탭 이름": [{"머리글": 값, ...}, ...], ...}` |
 | `append`(줄 더하기) | `{"rows": {"탭 이름": [줄들]}}` | 여러 탭의 여러 줄을 머리글 순서대로 맨 아래에 한 번에 더합니다 | `{"added": 더한 줄 수}` |
 | `update`(줄 고치기) | `{"tab", "key", "value", "changes"}` | `key` 칸 값이 `value`인 줄에서 `changes`에 있는 칸만 바꿉니다. 그 줄이 없으면 "수정할 기록이 없습니다."로 답합니다 | `{"updated": 1}` |
@@ -86,10 +90,10 @@ Google 쪽 코드(Apps Script)는 `gas` 폴더에 둡니다. 코드는 `gas/Code
 | 저장 담당 | 검사 기록과 사진을 읽고 쓰는 코드는 한 파일(저장 담당)로 모으고, 화면 요청을 받는 코드는 그 파일만 부릅니다 |
 | 고르는 곳 | 어느 저장 방식을 쓸지는 서버의 한 곳에서만 고릅니다. 목록과 홈 숫자를 계산할 때는 두 저장 방식 모두 같은 코드를 씁니다 |
 | 드라이브 사진 | 공개하지 않습니다. `images` 탭의 사진 주소 칸 `image_url`에는 드라이브 파일 ID를 `/api/drive/(파일 ID)` 형식으로 적고, 로그인한 사람이 사진을 열면 서버가 그 주소에서 파일 ID를 꺼내 `getPhoto`로 사진을 받아 보여 줍니다 |
-| 보내는 곳 | 서버는 `.env`의 `GAS_WEBAPP_URL`(웹앱 주소, "저장 방식 고르기")로 Google 쪽 코드에 요청을 보내고 답을 받습니다 |
+| 보내는 곳 | 서버는 `.env`의 `GAS_WEBAPP_URL`(웹앱 주소, "저장 방식 고르기")로 Apps Script 코드에 요청을 보내고 답을 받습니다 |
 | 다른 주소 | 웹앱이 다른 주소로 넘겨 주면 따라갑니다 |
 | 연결 실패 | 연결하지 못했거나 JSON이 아닌 답(권한 승인 전 화면 등)이 오면 "Google에 연결하지 못했습니다. 인터넷 연결과 권한 승인(npm.cmd run gas:open)을 확인하세요." 한 줄을 보여 줍니다 |
-| Google 쪽 실패 | `{"ok": false}`면 그 `error` 문장을 그대로 보여 줍니다 |
+| Apps Script 실패 | `{"ok": false}`면 그 `error` 문장을 그대로 보여 줍니다 |
 
 등록은 이 순서로 합니다. 사진 없는 검사나 검사 없는 사진 줄이 남지 않게 하려는 것입니다.
 
@@ -97,29 +101,48 @@ Google 쪽 코드(Apps Script)는 `gas` 폴더에 둡니다. 코드는 `gas/Code
 2. 통과한 뒤에만 사진(고른 사진 그대로)을 `savePhoto`로 올립니다.
 3. 검사 줄과 사진 줄을 `append` 한 번으로 함께 저장합니다.
 
-## 수강생이 치는 명령
+## Apps Script 명령
 
-`package.json`의 `npm.cmd run gas:…` 명령입니다. AI는 이 명령을 만들거나 고치기만 하고 실행하지 않습니다. 사용자가 명령 창에서 직접 칩니다.
+`package.json`의 `npm.cmd run gas:…` 명령입니다.
+
+3-7에서 clasp를 처음 쓰면 npx로 수업 버전 3.4.1을 받습니다. 설치 이력이나 실패 이력이 있으면 clasp의 npx 캐시만 정리합니다. 해당 캐시를 구분하기 어려우면 이번 실습용 새 npm 캐시 폴더를 지정합니다. 버전 확인(`npx.cmd --yes @google/clasp@3.4.1 --version`)과 `npm.cmd run gas:login`은 같은 캐시를 사용합니다. 새 캐시를 지정했다면 두 명령에 같은 `npm_config_cache` 값을 전달합니다.
 
 - clasp는 `npx --yes @google/clasp@3.4.1` 로 부릅니다. 질문 없이 명령이 끝나게 만듭니다. 스크립트 파일에서 clasp를 부를 때는 Windows에서도 동작하도록 셸 명령 한 줄로 부릅니다.
 - 스크립트 파일은 `.env` 내용을 출력하지 않고 `node --env-file-if-exists=.env` 로 값만 읽습니다(`gas:deploy`는 `.env`에 줄을 적기만 합니다).
 - `gas:redeploy`, `gas:open`, `gas:init`은 `.env`에 웹앱 주소가 없으면 ".env에 웹앱 주소가 없습니다. 먼저 npm.cmd run gas:deploy를 실행하세요."로 끝냅니다.
 - `gas:deploy`와 `gas:redeploy`는 clasp 출력을 터미널에 보여 주지 않습니다.
-- Google 쪽 코드를 고친 뒤에는 `gas:push`, `gas:redeploy`를 차례로 쳐야 반영됩니다. `gas:push`가 실패하면 `gas:deploy`나 `gas:redeploy`를 치지 않습니다. 사용자가 보낸 오류를 고치느라 Google 쪽 코드를 고쳤으면 직접 치지 말고, 답에 "명령 창에서 `npm.cmd run gas:push`와 `npm.cmd run gas:redeploy`를 차례로 쳐 주세요."를 적습니다.
+- Apps Script 코드를 고친 뒤에는 `gas:push`, `gas:redeploy`를 차례로 쳐야 반영됩니다. `gas:push`가 실패하면 `gas:deploy`나 `gas:redeploy`를 치지 않습니다. 사용자가 보낸 오류를 고치느라 Apps Script 코드를 고쳤고 `.env`에 웹앱 주소가 있으면 `npm.cmd run gas:push`와 `npm.cmd run gas:redeploy`를 차례로 실행합니다.
+- 사용자가 이 명령 실행이나 Google 로그인, 권한 승인을 맡기면 AI가 합니다. `gas:login`이나 `gas:open`이 기본 브라우저를 열면, 그 창에서 하거나 같은 주소(clasp가 보여 준 로그인 주소, `.env`의 웹앱 주소 끝에 `?authuser=0`을 붙인 주소)를 ego (lite) 브라우저에서 열어 진행합니다. 따로 부탁이 없으면 웹앱 주소는 채팅 답에 적지 않습니다.
+- `.clasp.json`이 없는데(3회차 참고의 Apps Script 편집기 방법으로 연결한 경우) Apps Script 코드를 올려야 하면, AI가 ego (lite) 브라우저에서 그 프로젝트 편집기 주소의 `/d/`와 `/edit` 사이 글자(스크립트 ID)를 찾아 웹 서비스 폴더 맨 위에 `{"scriptId": "(스크립트 ID)", "rootDir": "gas"}` 모양의 `.clasp.json`을 만들고, `gas:login` 뒤에 `gas:push`, `gas:redeploy`를 써 봅니다. 그래도 안 되면 한 일과 나온 글을 답에 적습니다.
 
 | 명령 | 하는 일 | 성공할 때 | 그 밖의 경우 |
 |---|---|---|---|
 | `gas:login` | Google 로그인. clasp가 낸 글을 그대로 보여 줍니다 | | |
-| `gas:create` | 내 계정에 "tumbler-factory" Apps Script 프로젝트를 만들고 `gas` 폴더와 연결합니다(`.clasp.json`이 생깁니다). `.clasp.json`은 앱 폴더 맨 위에 만들고 코드 폴더는 `gas`로 지정합니다. clasp에는 `create --type standalone --title tumbler-factory --rootDir gas`를 줍니다. clasp가 `gas/appsscript.json`을 덮어쓸 수 있으니 이 파일은 Google 쪽 코드의 틀을 만들 때(이 문서의 "Google 쪽 코드의 틀") 새로 씁니다 | `.clasp.json`이 생겼으면 마지막 줄에 "프로젝트를 만들었습니다."를 보여 줍니다 | `.clasp.json`이 이미 있으면 실행하지 않고 "이미 프로젝트가 있습니다. 다시 만들지 않습니다."를 보여 줍니다. clasp가 실패하면 clasp가 낸 글을 줄이지 않고 그대로 보여 줍니다 |
+| `gas:create` | 내 계정에 "tumbler-factory" Apps Script 프로젝트를 만들고 `gas` 폴더와 연결합니다(`.clasp.json`이 생깁니다). `.clasp.json`은 웹 서비스 폴더 맨 위에 만들고 코드 폴더는 `gas`로 지정합니다. clasp에는 `create --type standalone --title tumbler-factory --rootDir gas`를 줍니다. clasp가 `gas/appsscript.json`을 덮어쓸 수 있으니 이 파일은 Apps Script 코드의 틀을 만들 때(이 문서의 "Apps Script 코드의 틀") 새로 씁니다 | `.clasp.json`이 생겼으면 마지막 줄에 "프로젝트를 만들었습니다."를 보여 줍니다 | `.clasp.json`이 이미 있으면 실행하지 않고 "이미 프로젝트가 있습니다. 다시 만들지 않습니다."를 보여 줍니다. clasp가 실패하면 clasp가 낸 글을 줄이지 않고 그대로 보여 줍니다 |
 | `gas:push` | `gas` 폴더의 코드를 Google에 덮어써서 올립니다(`--force`) | clasp 출력에서 `Pushed`를 찾았거나 바뀐 곳이 없어 `Script is already up to date`가 나왔을 때만 성공입니다(clasp가 실패로 끝나도 이 글이 있으면 성공으로 봅니다). 성공하면 마지막 줄에 "Google에 코드를 올렸습니다."를 보여 줍니다 | 로그인 문제(`invalid_grant`)로 실패하면 긴 오류 대신 "구글 로그인이 만료됐을 수 있습니다. npm.cmd run gas:login을 다시 하세요." 한 줄을 보여 줍니다. 그 밖의 실패는 clasp가 낸 글을 줄이지 않고 그대로 보여 줍니다 |
-| `gas:deploy` | 웹앱을 새로 배포합니다. clasp는 실패해도 성공처럼 끝날 수 있으니, 출력에서 `AKfyc`로 시작하는 번호를 딱 하나 찾았을 때만 성공입니다 | `.env`에 `GAS_WEBAPP_URL=https://script.google.com/macros/s/(그 번호)/exec` 와 `STORAGE_MODE=live`를 적습니다(같은 이름의 줄은 바꾸고 다른 줄은 그대로 둡니다. `.env`가 없으면 만듭니다). 마지막 두 줄은 ".env에 웹앱 주소를 적었습니다."와 "다음: npm.cmd run gas:open"입니다 | `.env`에 웹앱 주소가 이미 있으면 배포하지 않고 "이미 웹앱 주소가 있습니다. npm.cmd run gas:redeploy를 쓰세요."로 끝냅니다. 번호를 못 찾으면 `.env`를 건드리지 않고 "웹앱 번호를 찾지 못했습니다. 로그인이 만료됐으면 npm.cmd run gas:login을 다시 하세요."로 끝냅니다 |
-| `gas:redeploy` | `.env`에 적힌 주소의 번호로 같은 웹앱을 새 버전으로 바꿉니다(주소는 그대로) | `gas:deploy`처럼 출력에서 `AKfyc`로 시작하는 번호를 찾았을 때만 마지막 줄 "같은 웹앱을 새 버전으로 바꿨습니다. 주소는 그대로입니다."를 보여 줍니다 | 번호를 못 찾으면 "웹앱을 바꾸지 못했습니다. 로그인이 만료됐으면 npm.cmd run gas:login을 다시 하고 gas:push부터 다시 하세요." 한 줄로 끝냅니다 |
+| `gas:deploy` | 웹앱을 새로 배포합니다. clasp는 실패해도 성공처럼 끝날 수 있으니, 종료 코드가 0이고 표준 출력에 clasp 3.4.1의 성공 줄(`Deployed AKfyc… @버전`)이 딱 하나 있을 때만 성공입니다. 오류 글에 들어 있는 번호는 쓰지 않습니다 | `.env`에 `GAS_WEBAPP_URL=https://script.google.com/macros/s/(그 번호)/exec` 와 `STORAGE_MODE=live`를 적습니다(같은 이름의 줄은 바꾸고 다른 줄은 그대로 둡니다. `.env`가 없으면 만듭니다). 마지막 두 줄은 ".env에 웹앱 주소를 적었습니다."와 "다음: npm.cmd run gas:open"입니다 | `.env`에 웹앱 주소가 이미 있으면 배포하지 않고 "이미 웹앱 주소가 있습니다. npm.cmd run gas:redeploy를 쓰세요."로 끝냅니다. 번호를 못 찾으면 `.env`를 건드리지 않고 "웹앱 번호를 찾지 못했습니다. 로그인이 만료됐으면 npm.cmd run gas:login을 다시 하세요."로 끝냅니다 |
+| `gas:redeploy` | `.env`에 적힌 주소의 번호로 같은 웹앱을 새 버전으로 바꿉니다(주소는 그대로) | `gas:deploy`처럼 성공 줄을 확인하고, 그 번호가 요청한 배포 번호와 같을 때만 마지막 줄 "같은 웹앱을 새 버전으로 바꿨습니다. 주소는 그대로입니다."를 보여 줍니다 | 번호를 못 찾으면 "웹앱을 바꾸지 못했습니다. 로그인이 만료됐으면 npm.cmd run gas:login을 다시 하고 gas:push부터 다시 하세요." 한 줄로 끝냅니다 |
 | `gas:open` | `.env`의 웹앱 주소 끝에 `?authuser=0`을 붙여 기본 브라우저로 엽니다. 주소는 출력하지 않습니다 | | |
 | `gas:init` | 서버를 켜지 않고 Google에 `setup`을 시킵니다 | "시트와 사진 폴더를 준비했습니다." 한 줄과 그 아래에 `시트: (시트 주소)`, `폴더: (폴더 주소)` 두 줄을 보여 줍니다 | 실패하면 서버와 같은 한 줄 안내(이 문서의 "서버가 Google을 쓰는 법")로 끝냅니다 |
 
+3-3에서 `gas:create`는 실제로 웹 서비스 폴더에 `.clasp.json`이 생겼는지, `gas:push`는 위 표의 성공 문구가 있는지 확인합니다. clasp가 종료 코드 0을 줘도 이 확인에 실패하면 이유를 보여 주고 0이 아닌 코드로 끝냅니다.
+
+3-5에서 Windows용 `gas:open`을 만들 때는 웹앱 주소에서 검증한 배포 번호로 Google 주소를 다시 조립한 뒤, 아래처럼 엽니다. `start`의 첫 번째 따옴표 쌍은 빈 창 제목입니다. `windowsVerbatimArguments`를 켜야 Node가 따옴표 앞에 역슬래시를 붙이지 않습니다. macOS와 Linux에서는 기존처럼 주소를 각각 `open`, `xdg-open`에 인수 하나로 넘깁니다.
+
+```js
+result = spawnSync('cmd.exe', ['/d', '/s', '/c', `start "" "${url}"`], {
+  windowsVerbatimArguments: true,
+  stdio: 'ignore',
+});
+```
+
+3-5에서는 주소가 없을 때의 안내를 확인합니다. 배포가 끝난 3-18에서는 `npm.cmd run gas:open`을 실행해 기본 브라우저에 Google 로그인, 권한 검토 또는 승인 완료 화면이 실제로 열리는지 확인합니다.
+
 ## 만들지 않는 것
 
-- 설정 화면 아래에 저장 방식에 따라 달라지는 설명 한 줄: 혼자 쓰는 연습용 앱이라 만들지 않습니다. 저장 방식은 설정 화면의 저장소 줄("저장 방식 고르기")로 봅니다.
-- 바닥글에 저장 방식에 따라 달라지는 글: 혼자 쓰는 연습용 앱이라 만들지 않습니다.
+아래 기능은 혼자 쓰는 연습용 웹 서비스라 기본으로는 만들지 않습니다. 사용자가 부탁하면 만듭니다.
 
-끝 표시: `3회차-초록시트-` 뒤에 "Google 쪽 코드의 틀"의 `appsscript.json` timeZone을 붙입니다.
+- 설정 화면 아래에 저장 방식에 따라 달라지는 설명 한 줄: 혼자 쓰는 연습용 웹 서비스라 기본으로는 만들지 않습니다. 저장 방식은 설정 화면의 저장소 줄("저장 방식 고르기")로 봅니다.
+- 바닥글에 저장 방식에 따라 달라지는 글: 혼자 쓰는 연습용 웹 서비스라 기본으로는 만들지 않습니다.
+
+끝 표시: `3회차-초록시트-` 뒤에 "Apps Script 코드의 틀"의 `appsscript.json` timeZone을 붙입니다.
