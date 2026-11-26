@@ -1,4 +1,4 @@
-const fields = [
+var GEMINI_RESULT_FIELDS = [
   '판정',
   '불량유형',
   '관찰·수치 근거',
@@ -9,14 +9,18 @@ const fields = [
 
 function normalizeGeminiResult(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
-  if (!['OK', 'NG', 'HOLD'].includes(value['판정'])) return null;
 
-  const normalized = {};
-  for (const field of fields) {
+  const result = {};
+  for (let index = 0; index < GEMINI_RESULT_FIELDS.length; index += 1) {
+    const field = GEMINI_RESULT_FIELDS[index];
     if (typeof value[field] !== 'string') return null;
-    normalized[field] = value[field];
+    result[field] = value[field];
   }
-  return normalized;
+
+  if (!['OK', 'NG', 'HOLD'].includes(result['판정'])) return null;
+  return result;
 }
 
-if (typeof module !== 'undefined') module.exports = { normalizeGeminiResult };
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { GEMINI_RESULT_FIELDS, normalizeGeminiResult };
+}

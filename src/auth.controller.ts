@@ -22,17 +22,13 @@ export class AuthController {
   ): { user: AuthUser } | { error: string } {
     const username = credentials?.username;
     const password = credentials?.password;
-    const account =
-      typeof username === 'string' && Object.hasOwn(accounts, username)
-        ? accounts[username]
-        : undefined;
+    const account = typeof username === 'string' ? accounts[username] : undefined;
 
     if (!account || account.password !== password) {
       return { error: '로그인 정보를 확인하세요.' };
     }
 
-    const accountName = username as string;
-    const user = { username: accountName, role: accountName };
+    const user = { username: username as string, role: username as string };
     request.session.user = user;
     return { user };
   }

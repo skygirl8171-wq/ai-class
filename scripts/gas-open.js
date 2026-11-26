@@ -15,12 +15,10 @@ if (!deploymentId) {
 const url = `https://script.google.com/macros/s/${deploymentId}/exec?authuser=0`;
 let result;
 if (process.platform === 'win32') {
-  const escapedUrl = url.replace(/'/g, "''");
-  result = spawnSync(
-    'powershell.exe',
-    ['-NoProfile', '-NonInteractive', '-Command', `Start-Process '${escapedUrl}'`],
-    { stdio: 'ignore' },
-  );
+  result = spawnSync('cmd.exe', ['/d', '/s', '/c', `start "" "${url}"`], {
+    windowsVerbatimArguments: true,
+    stdio: 'ignore',
+  });
 } else {
   result = spawnSync(process.platform === 'darwin' ? 'open' : 'xdg-open', [url], { stdio: 'ignore' });
 }

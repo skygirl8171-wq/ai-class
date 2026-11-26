@@ -5,21 +5,28 @@ function doGet() {
 function doPost(event) {
   try {
     const request = JSON.parse(event.postData.contents);
-    if (request.action === 'setup') {
-      return jsonOutput({ ok: true, data: setupStorage() });
-    }
-    const spreadsheet = getConfiguredSpreadsheet();
     let data;
-    if (request.action === 'read') data = readSheets(spreadsheet, request.tabs);
-    else if (request.action === 'append') data = appendRows(spreadsheet, request.rows);
-    else if (request.action === 'update') data = updateRow(spreadsheet, request);
-    else if (request.action === 'saveGeminiResult') data = saveGeminiResult(spreadsheet, request.record);
-    else if (request.action === 'listGeminiResults') data = listGeminiResults(spreadsheet, request.inspection_id);
-    else if (request.action === 'runGemini') data = runGemini(request);
-    else if (request.action === 'setOnePortKey') data = setOnePortKey(request);
-    else if (request.action === 'savePhoto') data = savePhoto(request);
-    else if (request.action === 'getPhoto') data = getPhoto(request.id);
-    else throw createUserError('지원하지 않는 일입니다.');
+    if (request.action === 'setup') {
+      data = setupStorage();
+    } else {
+      const spreadsheet = getConfiguredSpreadsheet();
+      if (request.action === 'read') data = readSheets(spreadsheet, request.tabs);
+      else if (request.action === 'append') data = appendRows(spreadsheet, request.rows);
+      else if (request.action === 'update') data = updateRow(spreadsheet, request);
+      else if (request.action === 'savePhoto') data = savePhoto(request);
+      else if (request.action === 'getPhoto') data = getPhoto(request.id);
+      else if (request.action === 'saveGeminiResult') data = saveGeminiResult(spreadsheet, request.record);
+      else if (request.action === 'listGeminiResults') data = listGeminiResults(spreadsheet, request.inspection_id);
+      else if (request.action === 'saveInspectionRecord') data = saveInspectionRecord(spreadsheet, request.record, request.defects);
+      else if (request.action === 'listInspectionRecords') data = listInspectionRecords(spreadsheet, request.inspection_id);
+      else if (request.action === 'saveEvidenceQuery') data = saveEvidenceQuery(spreadsheet, request.record);
+      else if (request.action === 'listEvidenceQueries') data = listEvidenceQueries(spreadsheet, request.inspection_id);
+      else if (request.action === 'saveEvidenceLink') data = saveEvidenceLink(spreadsheet, request.record);
+      else if (request.action === 'listEvidenceLinks') data = listEvidenceLinks(spreadsheet, request.inspection_id);
+      else if (request.action === 'runGemini') data = runGemini(request);
+      else if (request.action === 'setOnePortKey') data = setOnePortKey(request.key);
+      else throw new Error('지원하지 않는 일입니다.');
+    }
     return jsonOutput({ ok: true, data: data });
   } catch (error) {
     const message = error && error.userMessage
@@ -45,6 +52,18 @@ function setupStorage() {
     'content_version',
   ]);
   ensureSheetHeaders(spreadsheet, 'images', ['inspection_id', 'position', 'image_url']);
+  ensureSheetHeaders(spreadsheet, 'inspection_records', [
+    'record_id',
+    'inspection_id',
+    'user_id',
+    'recorded_at',
+    'decision',
+    'weight_g',
+    'notes',
+    'content_version',
+    'change_reason',
+  ]);
+  ensureSheetHeaders(spreadsheet, 'record_defects', ['record_id', 'defect_code']);
   ensureSheetHeaders(spreadsheet, 'gemini_results', [
     'result_id',
     'inspection_id',
@@ -57,6 +76,28 @@ function setupStorage() {
     'weight_g',
     'images',
     'result',
+  ]);
+  ensureSheetHeaders(spreadsheet, 'evidence_queries', [
+    'query_id',
+    'inspection_id',
+    'draft_id',
+    'created_at',
+    'mode',
+    'revision',
+    'prompt_name',
+    'question',
+    'answer',
+    'sources',
+  ]);
+  ensureSheetHeaders(spreadsheet, 'evidence_links', [
+    'link_id',
+    'query_id',
+    'inspection_id',
+    'draft_id',
+    'status',
+    'memo',
+    'user',
+    'created_at',
   ]);
   removeEmptyDefaultSheet(spreadsheet);
 
@@ -115,12 +156,6 @@ function removeEmptyDefaultSheet(spreadsheet) {
   });
 }
 
-function createUserError(message) {
-  const error = new Error(message);
-  error.userMessage = message;
-  return error;
-}
-
 function getConfiguredSpreadsheet() {
   const properties = PropertiesService.getScriptProperties();
   const spreadsheetId = properties.getProperty('SHEET_ID');
@@ -154,16 +189,13 @@ function readSheetRows(sheet) {
 
   const values = sheet.getRange(1, 1, lastRow, lastColumn).getValues();
   const headers = values[0];
-  return values
-    .slice(1)
-    .filter((row) => row.some((value) => value !== '' && value !== null))
-    .map((row) => {
-      const item = {};
-      headers.forEach((header, index) => {
-        if (header !== '' && header !== null) item[header] = readCellValue(row[index]);
-      });
-      return item;
+  return values.slice(1).filter((row) => row.some((value) => value !== '' && value !== null)).map((row) => {
+    const item = {};
+    headers.forEach((header, index) => {
+      if (header !== '' && header !== null) item[header] = readCellValue(row[index]);
     });
+    return item;
+  });
 }
 
 function appendRows(spreadsheet, rowsByTab) {
@@ -188,6 +220,319 @@ function appendRows(spreadsheet, rowsByTab) {
   return { added: added };
 }
 
+function saveGeminiResult(spreadsheet, record) {
+  if (!record || typeof record !== 'object' || Array.isArray(record)) {
+    throw createUserError('판독 결과를 확인하세요.');
+  }
+  if (typeof record.images !== 'string' || typeof record.result !== 'string') {
+    throw createUserError('판독 결과의 사진과 항목은 JSON 글이어야 합니다.');
+  }
+  try {
+    JSON.parse(record.images);
+    JSON.parse(record.result);
+  } catch (error) {
+    throw createUserError('판독 결과의 사진과 항목을 읽을 수 없습니다.');
+  }
+
+  const appended = appendRows(spreadsheet, { gemini_results: [record] });
+  return { saved: appended.added };
+}
+
+function listGeminiResults(spreadsheet, inspectionId) {
+  if (inspectionId !== undefined && typeof inspectionId !== 'string') {
+    throw createUserError('검사번호를 확인하세요.');
+  }
+
+  const sheet = spreadsheet.getSheetByName('gemini_results');
+  if (!sheet) return { results: [] };
+
+  const rows = readSheetRows(sheet)
+    .filter((row) => inspectionId === undefined || row.inspection_id === inspectionId)
+    .map((row) => ({
+      ...row,
+      images: parseGeminiJsonCell(row.images, []),
+      result: parseGeminiJsonCell(row.result, {}),
+    }));
+  return { results: rows };
+}
+
+function saveInspectionRecord(spreadsheet, record, defects) {
+  if (!record || typeof record !== 'object' || Array.isArray(record)) {
+    throw createUserError('판단을 확인하세요.');
+  }
+  if (
+    typeof record.record_id !== 'string' ||
+    typeof record.inspection_id !== 'string' ||
+    typeof record.user_id !== 'string' ||
+    typeof record.recorded_at !== 'string' ||
+    !['OK', 'NG', 'HOLD'].includes(record.decision) ||
+    (record.weight_g !== null && typeof record.weight_g !== 'number') ||
+    typeof record.notes !== 'string' ||
+    typeof record.content_version !== 'number' ||
+    typeof record.change_reason !== 'string'
+  ) {
+    throw createUserError('판단을 확인하세요.');
+  }
+  if (!Array.isArray(defects) || defects.some((code) => !['D01', 'D02', 'D03', 'D04'].includes(code))) {
+    throw createUserError('불량을 확인하세요.');
+  }
+
+  const inspectionSheet = spreadsheet.getSheetByName('inspections');
+  if (!inspectionSheet) throw createUserError('검사를 찾을 수 없습니다.');
+  const inspectionRows = readSheetRows(inspectionSheet);
+  if (!inspectionRows.some((row) => row.inspection_id === record.inspection_id)) {
+    throw createUserError('검사를 찾을 수 없습니다.');
+  }
+
+  appendRows(spreadsheet, {
+    inspection_records: [record],
+    record_defects: defects.map((defect_code) => ({
+      record_id: record.record_id,
+      defect_code: defect_code,
+    })),
+  });
+  updateRow(spreadsheet, {
+    tab: 'inspections',
+    key: 'inspection_id',
+    value: record.inspection_id,
+    changes: { content_version: record.content_version },
+  });
+  return { saved: 1 };
+}
+
+function listInspectionRecords(spreadsheet, inspectionId) {
+  if (inspectionId !== undefined && typeof inspectionId !== 'string') {
+    throw createUserError('검사번호를 확인하세요.');
+  }
+  const recordSheet = spreadsheet.getSheetByName('inspection_records');
+  const defectSheet = spreadsheet.getSheetByName('record_defects');
+  const records = recordSheet
+    ? readSheetRows(recordSheet)
+      .filter((row) => inspectionId === undefined || row.inspection_id === inspectionId)
+      .map((row) => ({
+        ...row,
+        weight_g: row.weight_g === '' || row.weight_g === null ? null : Number(row.weight_g),
+        notes: row.notes === '' || row.notes === null ? '' : String(row.notes),
+        change_reason: row.change_reason === '' || row.change_reason === null ? '' : String(row.change_reason),
+        content_version: Number(row.content_version) || 0,
+      }))
+    : [];
+  const recordIds = new Set(records.map((record) => record.record_id));
+  const defects = defectSheet
+    ? readSheetRows(defectSheet).filter((row) => recordIds.has(row.record_id))
+    : [];
+  return { records: records, defects: defects };
+}
+
+function saveEvidenceQuery(spreadsheet, record) {
+  if (!record || typeof record !== 'object' || Array.isArray(record)) {
+    throw createUserError('근거 답을 확인하세요.');
+  }
+  if (typeof record.sources !== 'string') {
+    throw createUserError('근거 답의 출처는 JSON 글이어야 합니다.');
+  }
+  try {
+    JSON.parse(record.sources);
+  } catch (error) {
+    throw createUserError('근거 답의 출처를 읽을 수 없습니다.');
+  }
+  const appended = appendRows(spreadsheet, { evidence_queries: [record] });
+  return { saved: appended.added };
+}
+
+function listEvidenceQueries(spreadsheet, inspectionId) {
+  if (inspectionId !== undefined && typeof inspectionId !== 'string') {
+    throw createUserError('검사번호를 확인하세요.');
+  }
+  const sheet = spreadsheet.getSheetByName('evidence_queries');
+  if (!sheet) return { queries: [] };
+
+  const queries = readSheetRows(sheet)
+    .filter((row) => inspectionId === undefined || row.inspection_id === inspectionId)
+    .map((row) => ({ ...row, sources: parseGeminiJsonCell(row.sources, []) }));
+  return { queries: queries };
+}
+
+function saveEvidenceLink(spreadsheet, record) {
+  if (!record || typeof record !== 'object' || Array.isArray(record)) {
+    throw createUserError('대조 기록을 확인하세요.');
+  }
+  const appended = appendRows(spreadsheet, { evidence_links: [record] });
+  return { saved: appended.added };
+}
+
+function listEvidenceLinks(spreadsheet, inspectionId) {
+  if (inspectionId !== undefined && typeof inspectionId !== 'string') {
+    throw createUserError('검사번호를 확인하세요.');
+  }
+  const sheet = spreadsheet.getSheetByName('evidence_links');
+  if (!sheet) return { links: [] };
+
+  const links = readSheetRows(sheet)
+    .filter((row) => inspectionId === undefined || row.inspection_id === inspectionId);
+  return { links: links };
+}
+
+function parseGeminiJsonCell(value, fallback) {
+  if (value === '' || value === null || value === undefined) return fallback;
+  try {
+    return JSON.parse(String(value));
+  } catch (error) {
+    throw createUserError('저장된 판독 결과를 읽을 수 없습니다.');
+  }
+}
+
+function runGemini(request) {
+  if (
+    !request ||
+    typeof request.instruction !== 'string' ||
+    typeof request.product_name !== 'string' ||
+    typeof request.weight !== 'string' ||
+    typeof request.revision !== 'string' ||
+    typeof request.standard !== 'string' ||
+    !Array.isArray(request.imageIds) ||
+    request.imageIds.length === 0
+  ) {
+    throw createUserError('판독에 필요한 검사 정보와 사진을 확인하세요.');
+  }
+
+  const apiKey = PropertiesService.getScriptProperties().getProperty('ONEPORT_API_KEY');
+  if (!apiKey) throw createUserError('OnePort 키가 없습니다.');
+
+  const content = [{
+    type: 'text',
+    text: [
+      request.instruction,
+      `검사 정보: 제품 ${request.product_name || '제품 미지정'}, 중량 ${request.weight || '미측정'}, 적용 검사기준 ${request.revision}.`,
+      `검사기준 원문:\n${request.standard}`,
+      '아래 6개 항목의 JSON으로만 답해 주세요: 판정, 불량유형, 관찰·수치 근거, 적용 기준과 출처, 권고 조치, 사람 승인 필요 여부. 판정은 OK, NG, HOLD 중 하나로 작성해 주세요.',
+    ].join('\n\n'),
+  }];
+  let totalImageBytes = 0;
+
+  request.imageIds.forEach((imageId) => {
+    if (typeof imageId !== 'string' || imageId === '') {
+      throw createUserError('등록된 사진이 없습니다.');
+    }
+
+    let file;
+    try {
+      file = DriveApp.getFileById(imageId);
+    } catch (error) {
+      throw createUserError('등록된 사진이 없습니다.');
+    }
+    const blob = file.getBlob();
+    const bytes = blob.getBytes();
+    const mimeType = blob.getContentType() || file.getMimeType();
+    if (!mimeType || mimeType.indexOf('image/') !== 0) {
+      throw createUserError('등록된 사진이 없습니다.');
+    }
+    totalImageBytes += bytes.length;
+    if (totalImageBytes > 3 * 1024 * 1024) {
+      throw createUserError('사진이 너무 커서 판독할 수 없습니다.');
+    }
+    content.push({
+      type: 'image_url',
+      image_url: { url: `data:${mimeType};base64,${Utilities.base64Encode(bytes)}` },
+    });
+  });
+
+  let response;
+  try {
+    response = UrlFetchApp.fetch('https://oneport.kr/v1/chat/completions', {
+      method: 'post',
+      contentType: 'application/json',
+      headers: { Authorization: `Bearer ${apiKey}` },
+      payload: JSON.stringify({
+        model: 'gemini-3.8-flash',
+        messages: [{ role: 'user', content: content }],
+        response_format: { type: 'json_object' },
+        max_tokens: 8192,
+      }),
+      muteHttpExceptions: true,
+      timeoutSeconds: 120,
+    });
+  } catch (error) {
+    throw createUserError('OnePort에 연결하지 못했습니다. 2분쯤 뒤 다시 눌러 주세요.');
+  }
+
+  const statusCode = response.getResponseCode();
+  let responseBody = {};
+  try {
+    responseBody = JSON.parse(response.getContentText());
+  } catch (error) {
+    if (statusCode < 200 || statusCode >= 300) {
+      throw createUserError(getOnePortErrorMessage(statusCode, {}, apiKey));
+    }
+    throw createUserError('AI 응답 형식이 올바르지 않아 판독하지 못했습니다.');
+  }
+
+  if (statusCode < 200 || statusCode >= 300) {
+    throw createUserError(getOnePortErrorMessage(statusCode, responseBody, apiKey));
+  }
+
+  const contentText = responseBody && responseBody.choices && responseBody.choices[0] &&
+    responseBody.choices[0].message && responseBody.choices[0].message.content;
+  if (typeof contentText !== 'string') {
+    throw createUserError('AI 응답 형식이 올바르지 않아 판독하지 못했습니다.');
+  }
+
+  const jsonText = contentText.trim()
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```$/, '')
+    .trim();
+  let parsedResult;
+  try {
+    parsedResult = JSON.parse(jsonText);
+  } catch (error) {
+    throw createUserError('AI 응답 형식이 올바르지 않아 판독하지 못했습니다.');
+  }
+
+  const result = normalizeGeminiResult(parsedResult);
+  if (!result) throw createUserError('AI 응답 형식이 올바르지 않아 판독하지 못했습니다.');
+  return result;
+}
+
+function setOnePortKey(key) {
+  if (typeof key !== 'string' || key === '') {
+    throw createUserError('OnePort 키가 .env에 없습니다.');
+  }
+  PropertiesService.getScriptProperties().setProperty('ONEPORT_API_KEY', key);
+  return { saved: true };
+}
+
+function getOnePortErrorMessage(statusCode, responseBody, apiKey) {
+  const error = responseBody && responseBody.error && typeof responseBody.error === 'object'
+    ? responseBody.error
+    : {};
+  const safeMessage = sanitizeOnePortText(error.message || '요청에 실패했습니다.', apiKey);
+
+  if (statusCode === 401 && error.reason === 'key_revoked') {
+    return '이 OnePort 키는 꺼져 있습니다(코드 401). 다른 키로 바꿔 주세요.';
+  }
+  if (statusCode === 401) return 'OnePort 키가 맞지 않습니다(코드 401). 키를 다시 넣어 주세요.';
+  if (statusCode === 402) return 'OnePort 잔액이 부족해 판독하지 못했습니다(코드 402). 다른 키로 바꿔 주세요.';
+  if (statusCode === 403) return '이 OnePort 키로는 판독 모델을 쓸 수 없습니다(코드 403). 다른 키로 바꿔 주세요.';
+  if (statusCode === 404) return 'OnePort에서 판독 모델을 찾지 못했습니다(코드 404). 모델 이름을 확인해 주세요.';
+  if (statusCode === 413) return '사진이 너무 커서 판독할 수 없습니다(코드 413).';
+  if (
+    statusCode === 429 &&
+    (error.code === 'key_limit_exceeded' || error.type === 'key_limit_exceeded')
+  ) {
+    return 'OnePort 키의 사용 한도를 다 썼습니다(코드 429). 다른 키로 바꿔 주세요.';
+  }
+  if ([429, 500, 502, 503, 504].includes(statusCode)) {
+    return `AI 판독 서버가 붐빕니다(코드 ${statusCode}). 2분쯤 뒤 다시 눌러 주세요.`;
+  }
+  return `OnePort 오류(코드 ${statusCode}): ${safeMessage}`;
+}
+
+function sanitizeOnePortText(value, apiKey) {
+  let text = String(value);
+  if (apiKey) text = text.split(apiKey).join('[가림]');
+  return text.replace(/Bearer\s+[^\s"'`,}]+/gi, 'Bearer [가림]');
+}
+
 function updateRow(spreadsheet, request) {
   const sheet = spreadsheet.getSheetByName(request.tab);
   if (!sheet || !request || typeof request.key !== 'string' || !request.changes || typeof request.changes !== 'object') {
@@ -208,168 +553,6 @@ function updateRow(spreadsheet, request) {
     if (column >= 0) sheet.getRange(rowNumber, column + 1).setValue(toSheetValue(request.changes[header]));
   });
   return { updated: 1 };
-}
-
-function saveGeminiResult(spreadsheet, record) {
-  if (!record || typeof record !== 'object' || Array.isArray(record)) {
-    throw new Error('판독 결과를 확인하세요.');
-  }
-
-  const sheet = spreadsheet.getSheetByName('gemini_results');
-  if (!sheet) throw new Error('시트 탭을 찾을 수 없습니다.');
-  const headers = getSheetHeaders(sheet);
-  if (headers.length === 0) throw new Error('시트 머리글을 찾을 수 없습니다.');
-  sheet.getRange(sheet.getLastRow() + 1, 1, 1, headers.length)
-    .setValues([headers.map((header) => toSheetValue(record[header]))]);
-  return { saved: 1 };
-}
-
-function listGeminiResults(spreadsheet, inspectionId) {
-  const sheet = spreadsheet.getSheetByName('gemini_results');
-  if (!sheet) return { results: [] };
-  const results = readSheetRows(sheet);
-  return {
-    results: typeof inspectionId === 'string' && inspectionId !== ''
-      ? results.filter((record) => record.inspection_id === inspectionId)
-      : results,
-  };
-}
-
-function setOnePortKey(request) {
-  if (!request || typeof request.key !== 'string' || request.key.trim() === '') {
-    throw createUserError('OnePort 키가 .env에 없습니다.');
-  }
-  PropertiesService.getScriptProperties().setProperty('ONEPORT_API_KEY', request.key.trim());
-  return { saved: true };
-}
-
-function runGemini(request) {
-  const apiKey = PropertiesService.getScriptProperties().getProperty('ONEPORT_API_KEY');
-  if (!apiKey) throw createUserError('OnePort 키가 없습니다.');
-  if (!request || typeof request.instruction !== 'string' || typeof request.product_name !== 'string' ||
-      typeof request.weight !== 'string' || (request.revision !== 'Rev.A' && request.revision !== 'Rev.B') ||
-      typeof request.standard !== 'string' || !Array.isArray(request.imageIds)) {
-    throw createUserError('판독 정보를 확인하세요.');
-  }
-
-  const imageIds = request.imageIds;
-  const photos = imageIds.map(getPhoto);
-  const totalPhotoBytes = photos.reduce((total, photo) => total + Utilities.base64Decode(photo.base64).length, 0);
-  if (totalPhotoBytes > 3 * 1024 * 1024) {
-    throw createUserError('사진이 너무 커서 판독할 수 없습니다(코드 413).');
-  }
-
-  const content = [{
-    type: 'text',
-    text: [
-      request.instruction,
-      `제품: ${request.product_name}`,
-      `중량: ${request.weight}`,
-      `검사기준 버전: ${request.revision}`,
-      `검사기준 원문:\n${request.standard}`,
-    ].join('\n\n'),
-  }];
-  photos.forEach((photo) => {
-    content.push({
-      type: 'image_url',
-      image_url: { url: `data:${photo.mimeType};base64,${photo.base64}` },
-    });
-  });
-
-  let response;
-  try {
-    response = UrlFetchApp.fetch('https://oneport.kr/v1/chat/completions', {
-      method: 'post',
-      contentType: 'application/json',
-      headers: { Authorization: `Bearer ${apiKey}` },
-      payload: JSON.stringify({
-        model: 'gemini-3.8-flash',
-        messages: [{ role: 'user', content: content }],
-        response_format: { type: 'json_object' },
-        max_tokens: 8192,
-      }),
-      muteHttpExceptions: true,
-    });
-  } catch (error) {
-    throw createUserError('OnePort에 연결하지 못했습니다. 2분쯤 뒤 다시 눌러 주세요.');
-  }
-
-  const code = response.getResponseCode();
-  const body = response.getContentText();
-  let result;
-  try {
-    result = JSON.parse(body);
-  } catch (error) {
-    throw createUserError('OnePort에 연결하지 못했습니다. 2분쯤 뒤 다시 눌러 주세요.');
-  }
-
-  if (code < 200 || code >= 300) {
-    throw createUserError(getOnePortErrorMessage(code, result));
-  }
-
-  const answerText = result && result.choices && result.choices[0] && result.choices[0].message
-    ? result.choices[0].message.content
-    : null;
-  const answer = parseGeminiAnswer(answerText);
-  if (!answer) throw createUserError('Gemini 답이 6항목 형식이 아닙니다.');
-  return answer;
-}
-
-function parseGeminiAnswer(value) {
-  if (typeof value !== 'string') return null;
-  let text = value.trim();
-  if (text.indexOf('```') === 0) {
-    text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
-  }
-  let result;
-  try {
-    result = JSON.parse(text);
-  } catch (error) {
-    return null;
-  }
-
-  const fields = [
-    '판정',
-    '불량유형',
-    '관찰·수치 근거',
-    '적용 기준과 출처',
-    '권고 조치',
-    '사람 승인 필요 여부',
-  ];
-  if (!result || typeof result !== 'object' || Array.isArray(result) ||
-      (result['판정'] !== 'OK' && result['판정'] !== 'NG' && result['판정'] !== 'HOLD')) return null;
-  const normalized = {};
-  for (let index = 0; index < fields.length; index += 1) {
-    if (typeof result[fields[index]] !== 'string') return null;
-    normalized[fields[index]] = result[fields[index]];
-  }
-  return normalized;
-}
-
-function getOnePortErrorMessage(code, body) {
-  const error = body && typeof body.error === 'object' ? body.error : {};
-  const reason = error.reason;
-  const type = error.type;
-  const errorCode = error.code;
-  if (code === 401 && reason === 'key_revoked') return '이 OnePort 키는 꺼져 있습니다(코드 401). 다른 키로 바꿔 주세요.';
-  if (code === 401) return 'OnePort 키가 맞지 않습니다(코드 401). 키를 다시 넣어 주세요.';
-  if (code === 402) return 'OnePort 잔액이 부족해 판독하지 못했습니다(코드 402). 다른 키로 바꿔 주세요.';
-  if (code === 403) return '이 OnePort 키로는 판독 모델을 쓸 수 없습니다(코드 403). 다른 키로 바꿔 주세요.';
-  if (code === 404) return 'OnePort에서 판독 모델을 찾지 못했습니다(코드 404). 모델 이름을 확인해 주세요.';
-  if (code === 413) return '사진이 너무 커서 판독할 수 없습니다(코드 413).';
-  if (code === 429 && (errorCode === 'key_limit_exceeded' || type === 'key_limit_exceeded')) {
-    return 'OnePort 키의 사용 한도를 다 썼습니다(코드 429). 다른 키로 바꿔 주세요.';
-  }
-  if (code === 429 || code === 500 || code === 502 || code === 503 || code === 504) {
-    return `AI 판독 서버가 붐빕니다(코드 ${code}). 2분쯤 뒤 다시 눌러 주세요.`;
-  }
-  const message = typeof error.message === 'string' ? redactOnePortKey(error.message) : '';
-  return `OnePort 오류(코드 ${code}): ${message}`;
-}
-
-function redactOnePortKey(message) {
-  const key = PropertiesService.getScriptProperties().getProperty('ONEPORT_API_KEY');
-  return key ? message.split(key).join('[가림]').split(`Bearer ${key}`).join('Bearer [가림]') : message;
 }
 
 function getSheetHeaders(sheet) {
@@ -396,18 +579,19 @@ function valuesEqual(left, right) {
   return left === right;
 }
 
+function createUserError(message) {
+  const error = new Error(message);
+  error.userMessage = message;
+  return error;
+}
+
 function savePhoto(request) {
   if (typeof request.name !== 'string' || typeof request.mimeType !== 'string' || typeof request.base64 !== 'string') {
     throw new Error('사진 정보를 확인하세요.');
   }
 
   const properties = PropertiesService.getScriptProperties();
-  const folderId = properties.getProperty('FOLDER_ID');
-  if (!folderId) {
-    throw createUserError('시트와 사진 폴더가 아직 없습니다. npm.cmd run gas:init을 실행하세요.');
-  }
-
-  const folder = DriveApp.getFolderById(folderId);
+  const folder = DriveApp.getFolderById(properties.getProperty('FOLDER_ID'));
   const bytes = Utilities.base64Decode(request.base64);
   const blob = Utilities.newBlob(bytes, request.mimeType, request.name);
   const file = folder.createFile(blob);
@@ -420,12 +604,7 @@ function getPhoto(fileId) {
   }
 
   const properties = PropertiesService.getScriptProperties();
-  const folderId = properties.getProperty('FOLDER_ID');
-  if (!folderId) {
-    throw createUserError('시트와 사진 폴더가 아직 없습니다. npm.cmd run gas:init을 실행하세요.');
-  }
-
-  const folder = DriveApp.getFolderById(folderId);
+  const folder = DriveApp.getFolderById(properties.getProperty('FOLDER_ID'));
   const files = folder.getFiles();
   while (files.hasNext()) {
     const file = files.next();

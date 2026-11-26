@@ -1,10 +1,10 @@
 import { Controller, Get } from '@nestjs/common';
-import { getGeminiInfo, getStorageInfo } from './storage-mode';
+import { getOperationsInfo, type OperationsInfo } from './storage-mode';
 
 @Controller('api/operations')
 export class OperationsController {
   @Get()
-  getOperations() {
-    return { ...getStorageInfo(), ...getGeminiInfo() };
+  getOperations(): OperationsInfo {
+    return getOperationsInfo();
   }
 }
